@@ -11,7 +11,8 @@ CORS(app, origins=['http://localhost:5000', 'http://127.0.0.1:5000'])
 PALETTES_DIR = os.path.join(os.path.dirname(__file__), 'palettes')
 
 PALETTE_META = {
-    'sanbing': {'name': '散兵', 'file': 'sanbing.json'},
+    'sanbing': {'name': '散兵',   'file': 'sanbing.json'},
+    'artkal':  {'name': 'Artkal', 'file': 'artkal.json'},
     'perler':  {'name': 'Perler', 'file': 'perler.json'},
     'hama':    {'name': 'Hama',   'file': 'hama.json'},
 }
