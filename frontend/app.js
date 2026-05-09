@@ -50,8 +50,12 @@ createApp({
 
     // ── Lifecycle ───────────────────────────────────────────────
     onMounted(async () => {
-      const res = await fetch('/api/palettes');
-      palettes.value = await res.json();
+      try {
+        const res = await fetch('/api/palettes');
+        palettes.value = await res.json();
+      } catch {
+        showToast('无法加载色板，请刷新页面', 'error');
+      }
     });
 
     // ── Methods ─────────────────────────────────────────────────
