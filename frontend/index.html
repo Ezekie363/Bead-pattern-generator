@@ -3,42 +3,67 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>拼豆图纸生成器</title>
+  <title>拼豆图纸生成器 · Bead Pattern</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <div id="app">
-    <!-- 标题栏 -->
+
+    <!-- 顶部导航 -->
     <header class="header">
-      <h1>拼豆图纸生成器</h1>
+      <div class="logo">
+        <div class="logo-icon">
+          <span class="bead bead-red"></span>
+          <span class="bead bead-blue"></span>
+          <span class="bead bead-yellow"></span>
+          <span class="bead bead-green"></span>
+        </div>
+        <span class="logo-text">拼豆<span class="logo-accent">图纸</span></span>
+      </div>
+      <span class="header-tagline">免费像素豆图纸生成工具</span>
     </header>
 
-    <!-- 控制栏 -->
-    <div class="controls">
+    <!-- 工具栏 -->
+    <div class="toolbar">
       <div class="control-group">
-        <label>色板</label>
-        <select v-model="selectedPalette">
+        <label for="palette-select">色板</label>
+        <select id="palette-select" v-model="selectedPalette" title="选择色板品牌">
           <option v-for="p in palettes" :key="p.id" :value="p.id">{{ p.name }}</option>
         </select>
       </div>
       <div class="control-group">
-        <label>尺寸</label>
-        <select v-model="selectedPreset" @change="onPresetChange">
+        <label for="size-select">尺寸</label>
+        <select id="size-select" v-model="selectedPreset" @change="onPresetChange" title="选择图纸尺寸">
           <option v-for="p in presets" :key="p.label" :value="p.label">{{ p.label }}</option>
         </select>
       </div>
       <div class="control-group" v-if="isCustom">
-        <label>宽</label>
-        <input type="number" v-model.number="customWidth" min="1" max="200" class="size-input">
-        <label>×高</label>
-        <input type="number" v-model.number="customHeight" min="1" max="200" class="size-input">
+        <label for="custom-width">宽</label>
+        <input id="custom-width" type="number" v-model.number="customWidth" min="1" max="200" class="size-input" title="自定义宽度" placeholder="宽">
+        <span class="size-sep">×</span>
+        <label for="custom-height">高</label>
+        <input id="custom-height" type="number" v-model.number="customHeight" min="1" max="200" class="size-input" title="自定义高度" placeholder="高">
+      </div>
+      <div class="toolbar-actions">
+        <button type="button" class="btn btn-secondary" :disabled="!gridData" @click="exportPng">
+          ⬇ 导出 PNG
+        </button>
+        <button type="button" class="btn btn-primary" :disabled="!uploadedImage || isProcessing" @click="processImage">
+          <span v-if="isProcessing">⏳ 处理中…</span>
+          <span v-else>✦ 生成图纸</span>
+        </button>
       </div>
     </div>
 
-    <!-- 主内容区 -->
+    <!-- 主内容 -->
     <div class="main">
-      <!-- 左：上传 + 原图预览 -->
-      <div class="left-panel">
+
+      <!-- 左：上传面板 -->
+      <div class="panel upload-panel">
+        <div class="panel-header">原图</div>
         <div
           class="upload-area"
           :class="{ dragging: isDragging }"
@@ -49,27 +74,24 @@
         >
           <input ref="fileInput" type="file" accept="image/*" @change="onFileInput" hidden>
           <div v-if="!imagePreviewUrl" class="upload-placeholder">
-            <span class="upload-icon">📁</span>
+            <div class="upload-icon">🖼️</div>
             <p>点击或拖拽上传图片</p>
-            <p class="upload-hint">支持 JPG、PNG、WEBP</p>
+            <p class="upload-hint">支持 JPG · PNG · WEBP</p>
           </div>
           <img v-else :src="imagePreviewUrl" class="preview-img" alt="原图">
         </div>
-        <p class="upload-label">原图预览</p>
       </div>
 
-      <!-- 右：网格图纸 -->
-      <div class="right-panel">
+      <!-- 右：图纸面板 -->
+      <div class="panel grid-panel">
+        <div class="panel-header">图纸预览</div>
         <div v-if="!gridData" class="grid-placeholder">
-          <p>处理后的图纸将在这里显示</p>
+          <div class="grid-placeholder-icon">🎨</div>
+          <p>上传图片并点击「生成图纸」</p>
         </div>
         <div v-else class="grid-wrapper">
           <div class="grid" :style="gridStyle">
-            <div
-              v-for="(row, ri) in gridData"
-              :key="ri"
-              class="grid-row"
-            >
+            <div v-for="(row, ri) in gridData" :key="ri" class="grid-row">
               <div
                 v-for="(code, ci) in row"
                 :key="ci"
@@ -82,38 +104,20 @@
       </div>
     </div>
 
-    <!-- 统计栏 -->
+    <!-- 色号统计 -->
     <div class="stats-bar" v-if="stats.length">
-      <span class="stats-label">色号统计：</span>
+      <span class="stats-label">色号统计</span>
       <span v-for="s in stats" :key="s.code" class="stats-item">
         <span class="stats-swatch" :style="{ backgroundColor: s.hex }"></span>
         {{ s.code }}({{ s.count }})
       </span>
     </div>
 
-    <!-- 操作按钮 -->
-    <div class="action-bar">
-      <button
-        class="btn btn-primary"
-        :disabled="!uploadedImage || isProcessing"
-        @click="processImage"
-      >
-        <span v-if="isProcessing">⏳ 处理中...</span>
-        <span v-else>处理图片</span>
-      </button>
-      <button
-        class="btn btn-secondary"
-        :disabled="!gridData"
-        @click="exportPng"
-      >
-        导出 PNG
-      </button>
-    </div>
-
     <!-- Toast 通知 -->
     <div class="toast" :class="[toast.type, { show: toast.show }]">
       {{ toast.message }}
     </div>
+
   </div>
 
   <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
