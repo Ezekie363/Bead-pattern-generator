@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>拼豆图纸生成器</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div id="app">
+    <!-- 标题栏 -->
+    <header class="header">
+      <h1>拼豆图纸生成器</h1>
+    </header>
+
+    <!-- 控制栏 -->
+    <div class="controls">
+      <div class="control-group">
+        <label>色板</label>
+        <select v-model="selectedPalette">
+          <option v-for="p in palettes" :key="p.id" :value="p.id">{{ p.name }}</option>
+        </select>
+      </div>
+      <div class="control-group">
+        <label>尺寸</label>
+        <select v-model="selectedPreset" @change="onPresetChange">
+          <option v-for="p in presets" :key="p.label" :value="p.label">{{ p.label }}</option>
+        </select>
+      </div>
+      <div class="control-group" v-if="isCustom">
+        <label>宽</label>
+        <input type="number" v-model.number="customWidth" min="1" max="200" class="size-input">
+        <label>×高</label>
+        <input type="number" v-model.number="customHeight" min="1" max="200" class="size-input">
+      </div>
+    </div>
+
+    <!-- 主内容区 -->
+    <div class="main">
+      <!-- 左：上传 + 原图预览 -->
+      <div class="left-panel">
+        <div
+          class="upload-area"
+          :class="{ dragging: isDragging }"
+          @dragover.prevent="isDragging = true"
+          @dragleave="isDragging = false"
+          @drop.prevent="onDrop"
+          @click="$refs.fileInput.click()"
+        >
+          <input ref="fileInput" type="file" accept="image/*" @change="onFileInput" hidden>
+          <div v-if="!imagePreviewUrl" class="upload-placeholder">
+            <span class="upload-icon">📁</span>
+            <p>点击或拖拽上传图片</p>
+            <p class="upload-hint">支持 JPG、PNG、WEBP</p>
+          </div>
+          <img v-else :src="imagePreviewUrl" class="preview-img" alt="原图">
+        </div>
+        <p class="upload-label">原图预览</p>
+      </div>
+
+      <!-- 右：网格图纸 -->
+      <div class="right-panel">
+        <div v-if="!gridData" class="grid-placeholder">
+          <p>处理后的图纸将在这里显示</p>
+        </div>
+        <div v-else class="grid-wrapper">
+          <div class="grid" :style="gridStyle">
+            <div
+              v-for="(row, ri) in gridData"
+              :key="ri"
+              class="grid-row"
+            >
+              <div
+                v-for="(code, ci) in row"
+                :key="ci"
+                class="grid-cell"
+                :style="{ backgroundColor: colorMap[code], color: getTextColor(colorMap[code]) }"
+              >{{ code }}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 统计栏 -->
+    <div class="stats-bar" v-if="stats.length">
+      <span class="stats-label">色号统计：</span>
+      <span v-for="s in stats" :key="s.code" class="stats-item">
+        <span class="stats-swatch" :style="{ backgroundColor: s.hex }"></span>
+        {{ s.code }}({{ s.count }})
+      </span>
+    </div>
+
+    <!-- 操作按钮 -->
+    <div class="action-bar">
+      <button
+        class="btn btn-primary"
+        :disabled="!uploadedImage || isProcessing"
+        @click="processImage"
+      >
+        <span v-if="isProcessing">⏳ 处理中...</span>
+        <span v-else>处理图片</span>
+      </button>
+      <button
+        class="btn btn-secondary"
+        :disabled="!gridData"
+        @click="exportPng"
+      >
+        导出 PNG
+      </button>
+    </div>
+
+    <!-- Toast 通知 -->
+    <div class="toast" :class="[toast.type, { show: toast.show }]">
+      {{ toast.message }}
+    </div>
+  </div>
+
+  <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
