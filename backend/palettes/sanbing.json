@@ -22,7 +22,7 @@
   {"code": "B24", "name": "暗棕",   "hex": "#5D4037"},
   {"code": "C01", "name": "浅蓝",   "hex": "#BBDEFB"},
   {"code": "C02", "name": "天蓝",   "hex": "#64B5F6"},
-  {"code": "C5",  "name": "蓝色",   "hex": "#1E88E5"},
+  {"code": "C05", "name": "蓝色",   "hex": "#1E88E5"},
   {"code": "C06", "name": "深蓝",   "hex": "#0D47A1"},
   {"code": "E8",  "name": "橄榄",   "hex": "#8B8C5E"},
   {"code": "M1",  "name": "浅金",   "hex": "#C9B46E"},

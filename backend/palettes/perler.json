@@ -18,7 +18,7 @@
   {"code": "P017", "name": "Dk Brown",   "hex": "#4B2F1A"},
   {"code": "P018", "name": "Gray",       "hex": "#808080"},
   {"code": "P019", "name": "Lt Gray",    "hex": "#D3D3D3"},
-  {"code": "P020", "name": "Cheddar",    "hex": "#FF8C00"},
+  {"code": "P020", "name": "Cheddar",    "hex": "#F1AA0C"},
   {"code": "P021", "name": "Rust",       "hex": "#B7410E"},
   {"code": "P022", "name": "Magenta",    "hex": "#CC00CC"},
   {"code": "P023", "name": "Cream",      "hex": "#FFFDD0"},
