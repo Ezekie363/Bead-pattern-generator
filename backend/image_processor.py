@@ -8,9 +8,10 @@ def process_image(image_data: bytes, palette: list, width: int, height: int) -> 
     img = img.resize((width, height), Image.LANCZOS)
 
     try:
-        pixels = list(img.get_flattened_data())  # Pillow 14+
+        pixels = list(img.get_flattened_data())  # preferred since Pillow 10.1; getdata() deprecated in 14
     except AttributeError:
         pixels = list(img.getdata())
+
     palette_labs = precompute_palette_labs(palette)
     color_map = {c['code']: c for c in palette}
 
