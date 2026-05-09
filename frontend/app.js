@@ -121,7 +121,7 @@ createApp({
     function exportPng() {
       if (!gridData.value || !stats.value.length) return;
 
-      const cellSize = 14;
+      const cellSize = 22;
       const cols = gridData.value[0].length;
       const rows = gridData.value.length;
 
@@ -169,7 +169,7 @@ createApp({
           ctx.strokeRect(x, y, cellSize, cellSize);
 
           ctx.fillStyle = getTextColor(hex);
-          ctx.font = `${cellSize * 0.32}px Arial`;
+          ctx.font = `bold ${cellSize * 0.42}px Arial`;
           ctx.textAlign = 'center';
           ctx.textBaseline = 'middle';
           ctx.fillText(code, x + cellSize / 2, y + cellSize / 2);
@@ -179,7 +179,7 @@ createApp({
       // ── Draw coordinate axis numbers ─────────────────────────
       // Show every Nth label so numbers don't collide
       const step = cellSize < 10 ? 5 : cellSize < 16 ? 1 : 1;
-      const axisFontSize = Math.max(5, Math.min(8, cellSize * 0.52));
+      const axisFontSize = Math.max(7, Math.min(11, cellSize * 0.52));
       ctx.font = `${axisFontSize}px Arial`;
       ctx.fillStyle = '#9ca3af';
       ctx.textAlign = 'center';
