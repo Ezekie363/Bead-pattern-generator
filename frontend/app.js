@@ -122,12 +122,20 @@ createApp({
       if (!gridData.value || !stats.value.length) return;
 
       const cellSize = 14;
-      const statsBarH = 50;
       const cols = gridData.value[0].length;
       const rows = gridData.value.length;
-      const W = cols * cellSize;
-      const H = rows * cellSize + statsBarH;
+      const W = Math.max(cols * cellSize, 300);
 
+      // Calculate multi-row stats bar height
+      const font = '11px Arial';
+      const swatchSize = 12;
+      const padding = 10;
+      const rowLineH = 24;
+      const itemsPerRow = Math.max(1, Math.floor((W - padding) / 90));
+      const statsRows = Math.ceil(stats.value.length / itemsPerRow);
+      const statsBarH = Math.max(36, statsRows * rowLineH + 12);
+
+      const H = rows * cellSize + statsBarH;
       const canvas = document.createElement('canvas');
       canvas.width = W;
       canvas.height = H;
@@ -155,25 +163,22 @@ createApp({
       ctx.fillStyle = '#1a1a2e';
       ctx.fillRect(0, rows * cellSize, W, statsBarH);
 
-      // Draw stats items
-      ctx.font = '11px Arial';
-      const swatchSize = 12;
-      const padding = 10;
-      let x = padding;
-      const y = rows * cellSize + statsBarH / 2;
+      // Draw stats items in multiple rows
+      ctx.font = font;
+      ctx.textAlign = 'left';
+      ctx.textBaseline = 'middle';
+      stats.value.forEach((s, idx) => {
+        const col = idx % itemsPerRow;
+        const row = Math.floor(idx / itemsPerRow);
+        const x = padding + col * Math.floor((W - padding) / itemsPerRow);
+        const y = rows * cellSize + 12 + row * rowLineH + rowLineH / 2;
 
-      stats.value.forEach(s => {
-        if (x > W - 60) return;
         ctx.fillStyle = s.hex;
         ctx.fillRect(x, y - swatchSize / 2, swatchSize, swatchSize);
-        x += swatchSize + 4;
 
         const label = `${s.code}(${s.count})`;
         ctx.fillStyle = '#e0e0e0';
-        ctx.textAlign = 'left';
-        ctx.textBaseline = 'middle';
-        ctx.fillText(label, x, y);
-        x += ctx.measureText(label).width + 14;
+        ctx.fillText(label, x + swatchSize + 4, y);
       });
 
       const link = document.createElement('a');

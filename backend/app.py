@@ -5,7 +5,8 @@ import json, os
 from image_processor import process_image
 
 app = Flask(__name__, static_folder='../frontend', static_url_path='')
-CORS(app)
+app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16 MB upload limit
+CORS(app, origins=['http://localhost:5000', 'http://127.0.0.1:5000'])
 
 PALETTES_DIR = os.path.join(os.path.dirname(__file__), 'palettes')
 
@@ -63,4 +64,5 @@ def process():
 
 
 if __name__ == '__main__':
-    app.run(debug=True, port=5000)
+    debug = os.environ.get('FLASK_DEBUG', 'false').lower() == 'true'
+    app.run(debug=debug, port=5000)
