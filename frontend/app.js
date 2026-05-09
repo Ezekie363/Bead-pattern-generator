@@ -124,54 +124,96 @@ createApp({
       const cellSize = 14;
       const cols = gridData.value[0].length;
       const rows = gridData.value.length;
-      const W = Math.max(cols * cellSize, 300);
 
-      // Calculate multi-row stats bar height
-      const font = '11px Arial';
+      // Axis margin — wide enough for the largest row/col number
+      const axisW = cols >= 100 ? 22 : 18;   // left & right
+      const axisH = rows >= 100 ? 22 : 18;   // top & bottom
+
+      const gridW = cols * cellSize;
+      const totalW = axisW + gridW + axisW;
+
+      // Stats bar (multi-row)
       const swatchSize = 12;
       const padding = 10;
       const rowLineH = 24;
-      const itemsPerRow = Math.max(1, Math.floor((W - padding) / 90));
+      const itemsPerRow = Math.max(1, Math.floor((totalW - padding) / 90));
       const statsRows = Math.ceil(stats.value.length / itemsPerRow);
       const statsBarH = Math.max(36, statsRows * rowLineH + 12);
 
-      const H = rows * cellSize + statsBarH;
+      const W = totalW;
+      const H = axisH + rows * cellSize + axisH + statsBarH;
+
       const canvas = document.createElement('canvas');
       canvas.width = W;
       canvas.height = H;
       const ctx = canvas.getContext('2d');
 
-      // Draw grid cells
+      // Dark background for axis margins and stats
+      ctx.fillStyle = '#1a1a2e';
+      ctx.fillRect(0, 0, W, H);
+
+      const gx = axisW;       // grid left edge x
+      const gy = axisH;       // grid top edge y
+
+      // ── Draw grid cells ──────────────────────────────────────
       gridData.value.forEach((row, ri) => {
         row.forEach((code, ci) => {
           const hex = colorMap.value[code] || '#ffffff';
+          const x = gx + ci * cellSize;
+          const y = gy + ri * cellSize;
+
           ctx.fillStyle = hex;
-          ctx.fillRect(ci * cellSize, ri * cellSize, cellSize, cellSize);
+          ctx.fillRect(x, y, cellSize, cellSize);
           ctx.strokeStyle = 'rgba(0,0,0,0.12)';
           ctx.lineWidth = 0.5;
-          ctx.strokeRect(ci * cellSize, ri * cellSize, cellSize, cellSize);
+          ctx.strokeRect(x, y, cellSize, cellSize);
 
           ctx.fillStyle = getTextColor(hex);
           ctx.font = `${cellSize * 0.32}px Arial`;
           ctx.textAlign = 'center';
           ctx.textBaseline = 'middle';
-          ctx.fillText(code, ci * cellSize + cellSize / 2, ri * cellSize + cellSize / 2);
+          ctx.fillText(code, x + cellSize / 2, y + cellSize / 2);
         });
       });
 
-      // Draw stats bar background
-      ctx.fillStyle = '#1a1a2e';
-      ctx.fillRect(0, rows * cellSize, W, statsBarH);
+      // ── Draw coordinate axis numbers ─────────────────────────
+      // Show every Nth label so numbers don't collide
+      const step = cellSize < 10 ? 5 : cellSize < 16 ? 1 : 1;
+      const axisFontSize = Math.max(5, Math.min(8, cellSize * 0.52));
+      ctx.font = `${axisFontSize}px Arial`;
+      ctx.fillStyle = '#9ca3af';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
 
-      // Draw stats items in multiple rows
-      ctx.font = font;
+      // Column numbers — top and bottom
+      for (let ci = 0; ci < cols; ci++) {
+        if ((ci + 1) % step !== 0 && ci !== 0) continue;
+        const x = gx + ci * cellSize + cellSize / 2;
+        const label = String(ci + 1);
+        ctx.fillText(label, x, axisH / 2);                          // top
+        ctx.fillText(label, x, gy + rows * cellSize + axisH / 2);   // bottom
+      }
+
+      // Row numbers — left and right
+      for (let ri = 0; ri < rows; ri++) {
+        if ((ri + 1) % step !== 0 && ri !== 0) continue;
+        const y = gy + ri * cellSize + cellSize / 2;
+        const label = String(ri + 1);
+        ctx.fillText(label, axisW / 2, y);                           // left
+        ctx.fillText(label, gx + gridW + axisW / 2, y);             // right
+      }
+
+      // ── Draw stats bar ────────────────────────────────────────
+      const statsY = gy + rows * cellSize + axisH;
+      ctx.font = '11px Arial';
       ctx.textAlign = 'left';
       ctx.textBaseline = 'middle';
+
       stats.value.forEach((s, idx) => {
         const col = idx % itemsPerRow;
         const row = Math.floor(idx / itemsPerRow);
         const x = padding + col * Math.floor((W - padding) / itemsPerRow);
-        const y = rows * cellSize + 12 + row * rowLineH + rowLineH / 2;
+        const y = statsY + 12 + row * rowLineH + rowLineH / 2;
 
         ctx.fillStyle = s.hex;
         ctx.fillRect(x, y - swatchSize / 2, swatchSize, swatchSize);
