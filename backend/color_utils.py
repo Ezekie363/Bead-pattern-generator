@@ -34,14 +34,30 @@ def rgb_to_lab(rgb: tuple) -> tuple:
     return (L, a, b_val)
 
 
-def find_nearest_color(pixel_rgb: tuple, palette: list) -> dict:
-    pixel_lab = np.array(rgb_to_lab(pixel_rgb))
-    min_dist = float('inf')
-    nearest = palette[0]
+def precompute_palette_labs(palette: list) -> np.ndarray:
+    """Pre-compute Lab values for all palette colors as a (N, 3) numpy array."""
+    labs = []
     for color in palette:
-        color_lab = np.array(rgb_to_lab(hex_to_rgb(color['hex'])))
-        dist = float(np.sum((pixel_lab - color_lab) ** 2))
-        if dist < min_dist:
-            min_dist = dist
-            nearest = color
-    return nearest
+        labs.append(rgb_to_lab(hex_to_rgb(color['hex'])))
+    return np.array(labs)  # shape: (N, 3)
+
+
+def find_nearest_color(pixel_rgb: tuple, palette: list, palette_labs: np.ndarray = None) -> dict:
+    """Find nearest palette color using Lab Euclidean distance.
+
+    Pass precomputed palette_labs (from precompute_palette_labs) to avoid
+    recomputing Lab values on every call.
+    """
+    if not palette:
+        raise ValueError("Palette cannot be empty")
+
+    pixel_lab = np.array(rgb_to_lab(pixel_rgb))  # shape: (3,)
+
+    if palette_labs is None:
+        palette_labs = precompute_palette_labs(palette)
+
+    # Vectorized distance: (N, 3) - (3,) broadcasts correctly
+    diffs = palette_labs - pixel_lab
+    dists = np.sum(diffs ** 2, axis=1)  # shape: (N,)
+    nearest_idx = int(np.argmin(dists))
+    return palette[nearest_idx]
